@@ -11,14 +11,21 @@ export const config = {
   // Database
   databaseUrl: process.env.DATABASE_URL || "file:./dev.db",
 
-  // Network selection (avalanche | polygon | others in the future)
-  network: process.env.NETWORK || "avalanche",
+  // Network selection (avalanche | avalanche-fuji | fuji | polygon | others in the future)
+  // Map "fuji" to "avalanche-fuji" for compatibility
+  network: (() => {
+    const net = process.env.NETWORK || "avalanche";
+    return net === "fuji" ? "avalanche-fuji" : net;
+  })(),
 
   // RPC URLs per network
   rpcUrls: {
     avalanche:
       process.env.RPC_URL_AVALANCHE ||
       "https://api.avax.network/ext/bc/C/rpc",
+    "avalanche-fuji":
+      process.env.RPC_URL_AVALANCHE ||
+      "https://api.avax-test.network/ext/bc/C/rpc",
     polygon: process.env.RPC_URL_POLYGON || "https://polygon-rpc.com",
   },
 
