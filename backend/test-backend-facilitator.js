@@ -6,7 +6,7 @@
  */
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:4000";
-const FACILITATOR_URL = process.env.FACILITATOR_URL || "http://localhost:3001";
+const FACILITATOR_URL = process.env.FACILITATOR_URL || "http://localhost:4000/facilitator";
 
 async function testBackendFacilitatorIntegration() {
   console.log("🧪 Testing Backend ↔ Facilitator Integration\n");

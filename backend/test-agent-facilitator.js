@@ -11,7 +11,7 @@
  */
 
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:4000";
-const FACILITATOR_URL = process.env.FACILITATOR_URL || "http://localhost:3001";
+const FACILITATOR_URL = process.env.FACILITATOR_URL || "http://localhost:4000/facilitator";
 
 // Simulate an agent wallet (for demo purposes)
 const AGENT_WALLET = {

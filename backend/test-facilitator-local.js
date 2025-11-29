@@ -5,7 +5,7 @@
  * Tests the facilitator endpoints step by step
  */
 
-const FACILITATOR_URL = process.env.FACILITATOR_URL || "http://localhost:3001";
+const FACILITATOR_URL = process.env.FACILITATOR_URL || "http://localhost:4000/facilitator";
 
 async function testFacilitator() {
   console.log("🧪 Testing x402 Facilitator Server\n");

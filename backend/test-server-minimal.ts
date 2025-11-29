@@ -24,7 +24,7 @@ registerPayrollRoutes(app);
 // Facilitator health check endpoint
 app.get("/api/facilitator/health", async (req: Request, res: Response) => {
   try {
-    const facilitatorUrl = process.env.X402_FACILITATOR_URL || "http://localhost:3001";
+    const facilitatorUrl = process.env.X402_FACILITATOR_URL || "http://localhost:4000/facilitator";
     const response = await fetch(`${facilitatorUrl}/health`);
     const data = await response.json();
     res.status(response.ok ? 200 : 503).json({
