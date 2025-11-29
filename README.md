@@ -11,6 +11,7 @@ SnowRail is a treasury orchestrator that connects onchain payments (Avalanche C-
 
 ## High-Level Architecture
 
+```
 ┌─────────────┐     ┌──────────────────┐     ┌─────────────┐
 │  Frontend   │────▶│  SnowRail API    │────▶│    Rail     │
 │  (React)    │     │  (Express + x402)│     │  (Fiat API) │
@@ -19,8 +20,11 @@ SnowRail is a treasury orchestrator that connects onchain payments (Avalanche C-
                     ┌────────▼──────────┐
                     │ Avalanche C-Chain │
                     │ (SnowRailTreasury)│
-                    └───────────────────┘- **Frontend**: React app that consumes the SnowRail API and drives the demo UX.
-- **Backend**: REST API with x402/8004, payroll orchestration and Rail integration (mock).
+                    └───────────────────┘
+```
+
+- **Frontend**: React app that consumes the SnowRail API and drives the demo UX.
+- **Backend**: REST API with x402/8004, payroll orchestration, and Rail integration (mock).
 - **Smart Contracts**: `SnowRailTreasury` deployed on Avalanche C-Chain.
 - **Database**: SQLite in dev (easily swappable to PostgreSQL via Prisma).
 
@@ -29,19 +33,20 @@ SnowRail is a treasury orchestrator that connects onchain payments (Avalanche C-
 ## Tech Stack
 
 | Area       | Tech                                                    |
-|-----------|----------------------------------------------------------|
-| Backend   | Node.js, TypeScript, Express                             |
-| Database  | Prisma ORM, SQLite (dev) / PostgreSQL-ready (prod)       |
-| Onchain   | Ethers.js, Avalanche C-Chain                             |
-| Protocols | x402 (HTTP 402), 8004 (metering config)                  |
-| Fiat      | Rail API (mocked client in this MVP)                     |
-| Frontend  | React, Vite, TypeScript                                  |
-| Contracts | Solidity ^0.8.20, Hardhat                                |
+|-------------|----------------------------------------------------------|
+| Backend     | Node.js, TypeScript, Express                             |
+| Database    | Prisma ORM, SQLite (dev) / PostgreSQL-ready (prod)       |
+| Onchain     | Ethers.js, Avalanche C-Chain                             |
+| Protocols   | x402 (HTTP 402), 8004 (metering config)                  |
+| Fiat        | Rail API (mocked client in this MVP)                     |
+| Frontend    | React, Vite, TypeScript                                  |
+| Contracts   | Solidity ^0.8.20, Hardhat                                |
 
 ---
 
 ## Project Structure
 
+```
 /contracts                  # Solidity smart contracts
   └── src/
       ├── SnowRailTreasury.sol
@@ -67,10 +72,14 @@ SnowRail is a treasury orchestrator that connects onchain payments (Avalanche C-
   └── src/
       ├── App.tsx          # View orchestration
       ├── components/      # Dashboard, PaymentFlow, PayrollDetail
-      └── lib/             # API client (executePayroll, getPayroll)---
+      └── lib/             # API client (executePayroll, getPayroll)
+```
+
+---
 
 ## Environment Configuration
 
+```bash
 # Server
 PORT=4000
 
@@ -91,7 +100,10 @@ X402_FACILITATOR_URL="https://facilitator.mock"
 
 # Rail API (mock base URL in this MVP)
 RAIL_API_BASE_URL="https://rail.mock"
-RAIL_API_KEY="rail-mock-key"> **Switching networks**: set `NETWORK=polygon` or `NETWORK=avalanche` and point `TREASURY_CONTRACT_ADDRESS` to the correct deployment. No business logic changes required.
+RAIL_API_KEY="rail-mock-key"
+```
+
+> **Switching networks**: set `NETWORK=polygon` or `NETWORK=avalanche` and point `TREASURY_CONTRACT_ADDRESS` to the correct deployment. No business logic changes required.
 
 ---
 
@@ -101,8 +113,11 @@ RAIL_API_KEY="rail-mock-key"> **Switching networks**: set `NETWORK=polygon` or `
 
 All monetized endpoints are protected by a dedicated middleware:
 
-POST /api/payroll/execute- **Without** `X-PAYMENT` header → HTTP 402 with metering payload:
- 
+**POST /api/payroll/execute**
+
+- **Without** `X-PAYMENT` header → HTTP 402 with metering payload:
+  
+  ```json
   {
     "error": "PAYMENT_REQUIRED",
     "meterId": "payroll_execute",
@@ -114,15 +129,20 @@ POST /api/payroll/execute- **Without** `X-PAYMENT` header → HTTP 402 with mete
       "version": "8004-alpha"
     }
   }
-  - **With** `X-PAYMENT: demo-token` (MVP) → access is granted and payroll is executed.
+  ```
 
-Implementation:
+- **With** `X-PAYMENT: demo-token` (MVP) → access is granted and payroll is executed.
+
+**Implementation:**
 - `backend/src/x402/metering.ts` – resource catalog.
 - `backend/src/x402/validator.ts` – validates `X-PAYMENT` (accepts `demo-token`).
 - `backend/src/x402/middleware.ts` – Express middleware that issues HTTP 402.
 
+---
+
 ### 8004 – Metering Configuration
 
+```ts
 // backend/src/x402/metering.ts
 export const meters = {
   payroll_execute: {
@@ -133,22 +153,29 @@ export const meters = {
     description: "Execute international payroll for up to 10 freelancers",
     version: "8004-alpha",
   },
-};This structure is intentionally ORM-like so additional resources can be added without changing the middleware.
+};
+```
+
+This structure is intentionally ORM-like so additional resources can be added without changing the middleware.
 
 ---
 
 ## Backend API
 
-| Method | Endpoint               | Protection | Description           |
-|--------|------------------------|-----------|-----------------------|
-| GET    | `/api/health`          | None      | Service health check  |
-| POST   | `/api/payroll/execute` | x402      | Execute demo payroll  |
-| GET    | `/api/payroll/:id`     | None      | Get payroll by ID     |
+| Method | Endpoint               | Protection | Description          |
+|--------|------------------------|-------------|----------------------|
+| GET    | `/api/health`          | None        | Service health check |
+| POST   | `/api/payroll/execute` | x402        | Execute demo payroll |
+| GET    | `/api/payroll/:id`     | None        | Get payroll by ID    |
 
 ### Status Lifecycle
 
+```
 PENDING → ONCHAIN_PAID → RAIL_PROCESSING → PAID
-                                   └──────→ FAILEDAll states are persisted in SQLite via Prisma and exposed to the frontend.
+                                   └──────→ FAILED
+```
+
+All states are persisted in SQLite via Prisma and exposed to the frontend.
 
 ---
 
@@ -158,23 +185,23 @@ PENDING → ONCHAIN_PAID → RAIL_PROCESSING → PAID
 
 `contracts/src/SnowRailTreasury.sol` is the onchain treasury for SnowRail:
 
-- **State**
-  - `address public owner;`
-  - `IJoeRouter2 public router;`
-  - `mapping(address => mapping(address => uint256)) public swapAllowances;`
+**State**
+- `address public owner;`
+- `IJoeRouter2 public router;`
+- `mapping(address => mapping(address => uint256)) public swapAllowances;`
 
-- **Events**
-  - `PaymentRequested(payer, payee, amount, token)`
-  - `PaymentExecuted(payer, payee, amount, token)`
-  - `PaymentFailed(payer, payee, amount, token, reason)`
-  - `SwapAuthorized(owner, fromToken, toToken, maxAmount)`
-  - `SwapExecuted(swapper, fromToken, toToken, amount)`
+**Events**
+- `PaymentRequested(payer, payee, amount, token)`
+- `PaymentExecuted(payer, payee, amount, token)`
+- `PaymentFailed(payer, payee, amount, token, reason)`
+- `SwapAuthorized(owner, fromToken, toToken, maxAmount)`
+- `SwapExecuted(swapper, fromToken, toToken, amount)`
 
-- **Core functions**
-  - `requestPayment(address payee, uint256 amount, address token)` – logs intent to pay.
-  - `executePayment(address payer, address payee, uint256 amount, address token)` – sends tokens from treasury to `payee`, emits success/failure events.
-  - `authorizeSwap(address fromToken, address toToken, uint256 maxAmount)` – admin-only swap limits.
-  - `executeSwap(address fromToken, address toToken, uint256 amountIn, uint256 amountOutMin, address[] calldata path)` – calls DEX router for swaps.
+**Core functions**
+- `requestPayment(address payee, uint256 amount, address token)` – logs intent to pay.
+- `executePayment(address payer, address payee, uint256 amount, address token)` – sends tokens from treasury to `payee`, emits success/failure events.
+- `authorizeSwap(address fromToken, address toToken, uint256 maxAmount)` – admin-only swap limits.
+- `executeSwap(address fromToken, address toToken, uint256 amountIn, uint256 amountOutMin, address[] calldata path)` – calls DEX router for swaps.
 
 A thin **ethers.js wrapper** is provided by `backend/src/services/treasuryClient.ts`.
 
@@ -202,20 +229,30 @@ For a deeper explanation, see `docs/Dogs/project-flow.md` (if present).
 
 ### 1. Compile Contracts (No Deployment)
 
+```bash
 cd contracts
 npm install
-npx hardhat compile### 2. Backend
+npx hardhat compile
+```
 
+### 2. Backend
+
+```bash
 cd backend
 npm install
 cp .env.example .env
 npx prisma migrate dev --name init
-npm run devBackend will be available at `http://localhost:4000`.
+npm run dev
+```
+
+Backend will be available at `http://localhost:4000`.
 
 ### 3. Frontend
 
+```bash
 cd frontend
 npm install
-npm run devFrontend will be available at `http://localhost:3000` with `/api` proxied to the backend.
+npm run dev
+```
 
----
+Frontend will be available at `http://localhost:3000` with `/api` proxied to the backend.
