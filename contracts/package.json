@@ -1,0 +1,16 @@
+{
+  "name": "snowrail-contracts",
+  "version": "1.0.0",
+  "description": "Smart contracts for SnowRail payroll system on Avalanche C-Chain",
+  "scripts": {
+    "compile": "hardhat compile",
+    "clean": "hardhat clean",
+    "test": "hardhat test"
+  },
+  "devDependencies": {
+    "hardhat": "^2.22.0",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0"
+  },
+  "license": "MIT"
+}
+
