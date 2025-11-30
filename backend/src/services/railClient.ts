@@ -22,27 +22,37 @@ export type RailPaymentResult = {
   failureReason?: string;
 };
 
+// OAuth2 Token Response
+type RailTokenResponse = {
+  token_type: string;
+  expires_in: number;
+  access_token: string;
+  scope: string;
+};
+
 // Rail API types (simplified from OpenAPI spec)
-type RailWithdrawal = {
-  amount: number;
-  created_timestamp: string;
-  destination_counterparty_id: string;
-  purpose: "PAYROLL";
+type RailWithdrawalRequest = {
+  withdrawal_rail: "ACH" | "FEDWIRE" | "SEPA_CT" | "SWIFT" | "CRYPTO";
+  description: string;
   source_account_id: string;
-  withdrawal_rail: "ACH" | "FEDWIRE" | "SEPA_CT" | "SWIFT";
-  description?: string;
+  amount: string; // Rail API expects amount as string
+  destination_counterparty_id: string;
+  purpose: "PAYROLL" | "PERSONAL_ACCOUNT" | "FAMILY" | "INSURANCE" | "INVESTMENT" | "REAL_ESTATE" | "TUITION" | "MEDICAL" | "TRAVEL" | "TRADE_TRANSACTIONS" | "UTILITY" | "TAX" | "LOAN" | "BILLS" | "TELECOM" | "INTELLECTUAL_PROPERTY" | "CHARITABLE_DONATIONS" | "MORTGAGE" | "EXPENSES_REIMBURSEMENT";
+  memo?: string;
 };
 
 type RailWithdrawalResponse = {
+  data: {
   id: string;
   status: string;
-  created_timestamp: string;
+    created_timestamp?: string;
   updated_timestamp?: string;
-  amount: number;
-  source_account_id: string;
-  destination_counterparty_id: string;
-  withdrawal_rail: string;
-  purpose: string;
+    amount?: number;
+    source_account_id?: string;
+    destination_counterparty_id?: string;
+    withdrawal_rail?: string;
+    purpose?: string;
+  };
 };
 
 type RailError = {
@@ -52,6 +62,89 @@ type RailError = {
   }>;
 };
 
+// Token cache to avoid requesting new token on every call
+let cachedToken: { token: string; expiresAt: number } | null = null;
+
+/**
+ * Get OAuth2 access token from Rail API
+ * Uses token caching to avoid unnecessary requests
+ * Exported for testing purposes
+ */
+export async function getRailAccessToken(): Promise<string> {
+  // Check if we have a valid cached token
+  if (cachedToken && cachedToken.expiresAt > Date.now() + 60000) {
+    // Refresh if less than 1 minute remaining
+    return cachedToken.token;
+  }
+
+  // Read from config, but also check process.env directly as fallback
+  const clientId = config.railClientId || process.env.RAIL_CLIENT_ID;
+  const clientSecret = config.railClientSecret || process.env.RAIL_CLIENT_SECRET;
+  const authUrl = config.railAuthUrl || process.env.RAIL_AUTH_URL;
+
+  if (!clientId || !clientSecret || !authUrl) {
+    throw new Error(
+      "Rail OAuth2 credentials not configured. Set RAIL_CLIENT_ID, RAIL_CLIENT_SECRET, and RAIL_AUTH_URL in .env file"
+    );
+  }
+
+  // Create Basic Auth header
+  const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+
+  // Required scopes for withdrawals
+  const scopes = [
+    "accounts:read",
+    "accounts:write",
+    "withdrawals:read",
+    "withdrawals:write",
+    "customers:read",
+    "customers:write",
+    "deposits:read",
+    "deposits:write",
+    "transfers:read",
+    "transfers:write",
+    "exchanges:read",
+    "exchanges:write",
+    "adjustments:read",
+    "adjustments:write",
+    "settlements:read",
+    "applications:read",
+    "applications:write",
+  ].join(" ");
+
+  const tokenUrl = `${authUrl}?grant_type=client_credentials&scope=${encodeURIComponent(scopes)}`;
+
+  try {
+    const response = await fetch(tokenUrl, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Cache-Control": "no-cache",
+        Authorization: `Basic ${basicAuth}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Rail OAuth2 error: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    const data = (await response.json()) as RailTokenResponse;
+
+    // Cache the token (expires_in is in seconds)
+    cachedToken = {
+      token: data.access_token,
+      expiresAt: Date.now() + (data.expires_in - 60) * 1000, // Refresh 1 minute before expiry
+    };
+
+    return data.access_token;
+  } catch (error) {
+    console.error("Failed to get Rail OAuth2 token:", error);
+    throw error;
+  }
+}
+
 /**
  * Create a Rail withdrawal (fiat payout)
  * @param input - Payment input data
@@ -60,75 +153,109 @@ type RailError = {
 export async function createRailPayment(
   input: RailPaymentInput,
 ): Promise<RailPaymentResult> {
-  const baseUrl = config.railApiBaseUrl;
-  const apiKey = config.railApiKey;
+  // Read from config, but also check process.env directly as fallback
+  const baseUrl = config.railApiBaseUrl || process.env.RAIL_API_BASE_URL;
+  const clientId = config.railClientId || process.env.RAIL_CLIENT_ID;
+  const clientSecret = config.railClientSecret || process.env.RAIL_CLIENT_SECRET;
 
-  if (!baseUrl || baseUrl === "https://rail.mock" || !apiKey || apiKey === "rail-mock-key") {
+  // Check if Rail is properly configured (not using mock)
+  // Only use mock if explicitly set to mock URL or if credentials are missing
+  const isMockUrl = !baseUrl || baseUrl === "https://rail.mock" || baseUrl.includes("rail.mock");
+  const hasCredentials = clientId && clientId.trim() !== "" && clientSecret && clientSecret.trim() !== "";
+  const isMockMode = isMockUrl || !hasCredentials;
+
+  if (isMockMode) {
     // Fallback to mock if not configured
-    console.warn("Rail API not configured, using mock");
+    console.warn("Rail API not configured, using mock", {
+      baseUrl: baseUrl || "not set",
+      hasClientId: !!clientId && clientId.trim() !== "",
+      hasClientSecret: !!clientSecret && clientSecret.trim() !== "",
+      clientIdLength: clientId?.length || 0,
+      clientSecretLength: clientSecret?.length || 0,
+      isMockUrl,
+    });
     return createMockRailPayment(input);
   }
 
+  // Log that we're using real Rail API (only in development)
+  if (process.env.NODE_ENV === "development") {
+    console.log("✅ Using Rail API (sandbox):", {
+      baseUrl,
+      clientId: clientId.substring(0, 10) + "...",
+      hasCredentials: true,
+    });
+  }
+
   try {
+    // Get OAuth2 access token
+    const accessToken = await getRailAccessToken();
+
     // For MVP: assume we have source_account_id and counterparty_id
     // In production, these should be configured per customer/recipient
     const sourceAccountId = input.sourceAccountId || process.env.RAIL_SOURCE_ACCOUNT_ID;
     const counterpartyId = input.counterpartyId || process.env.RAIL_COUNTERPARTY_ID;
 
     if (!sourceAccountId || !counterpartyId) {
+      const missingVars = [];
+      if (!sourceAccountId) missingVars.push("RAIL_SOURCE_ACCOUNT_ID");
+      if (!counterpartyId) missingVars.push("RAIL_COUNTERPARTY_ID");
+      
       throw new Error(
-        "RAIL_SOURCE_ACCOUNT_ID and RAIL_COUNTERPARTY_ID must be configured in .env"
+        `Rail configuration incomplete. Missing in .env: ${missingVars.join(", ")}. ` +
+        `To get these values: 1) Create a customer/application in Rail sandbox, ` +
+        `2) Create accounts and counterparties, 3) Add the IDs to your .env file.`
       );
     }
 
-    // Create withdrawal request
-    const withdrawal: RailWithdrawal = {
-      amount: input.amount / 100, // Convert from cents to dollars
-      created_timestamp: new Date().toISOString(),
-      destination_counterparty_id: counterpartyId,
-      purpose: "PAYROLL",
-      source_account_id: sourceAccountId,
+    // Create withdrawal request (Rail API expects amount as string)
+    const withdrawalRequest: RailWithdrawalRequest = {
       withdrawal_rail: "ACH", // Default to ACH, can be configured
       description: `Payroll payment for ${input.payrollId}`,
+      source_account_id: sourceAccountId,
+      amount: (input.amount / 100).toString(), // Convert from cents to dollars, then to string
+      destination_counterparty_id: counterpartyId,
+      purpose: "PAYROLL", // Required by Rail API
+      memo: `Payroll-${input.payrollId}`,
     };
 
     const response = await fetch(`${baseUrl}/v1/withdrawals`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-        "x-l2f-request-id": `snowrail-${Date.now()}`,
-        "x-l2f-idempotency-id": `payroll-${input.payrollId}`,
+        Authorization: `Bearer ${accessToken}`,
+        "X-L2f-Request-Id": `snowrail-${Date.now()}`,
       },
-      body: JSON.stringify(withdrawal),
+      body: JSON.stringify(withdrawalRequest),
     });
 
     if (!response.ok) {
+      let errorMsg = `Rail API error: ${response.status} ${response.statusText}`;
+      try {
       const errorData = (await response.json()) as RailError;
-      const errorMsg =
-        errorData.errors?.[0]?.description || `Rail API error: ${response.statusText}`;
+        errorMsg = errorData.errors?.[0]?.description || errorMsg;
+      } catch {
+        // If response is not JSON, use the status text
+      }
       throw new Error(errorMsg);
     }
 
-    const data = (await response.json()) as RailWithdrawalResponse;
+    const responseData = (await response.json()) as RailWithdrawalResponse;
+    const withdrawalData = responseData.data;
 
-    // Accept the withdrawal immediately (for MVP)
-    // In production, you might want to review before accepting
-    try {
-      await acceptRailWithdrawal(data.id);
-    } catch (acceptError) {
-      console.warn(`Failed to auto-accept withdrawal ${data.id}:`, acceptError);
-      // Return as PENDING if acceptance fails
-      return {
-        id: data.id,
-        status: "PENDING",
-        createdAt: data.created_timestamp,
-      };
-    }
+    // Note: Withdrawals in Rail need to be accepted before execution
+    // For now, we'll leave it in REQUESTED/PENDING status
+    // In production, you might want to:
+    // 1. Review withdrawals before accepting
+    // 2. Use webhooks to track status changes
+    // 3. Accept programmatically if you have the required permissions/signature
+    
+    // The withdrawal is created successfully and will remain in REQUESTED status
+    // until manually accepted via dashboard or with proper signature
 
     // Map Rail status to our status
     const statusMap: Record<string, RailPaymentResult["status"]> = {
       PENDING: "PENDING",
+      REQUESTED: "PENDING",
       ACCEPTED: "PROCESSING",
       PROCESSING: "PROCESSING",
       COMPLETED: "PAID",
@@ -137,9 +264,9 @@ export async function createRailPayment(
     };
 
     return {
-      id: data.id,
-      status: statusMap[data.status] || "PROCESSING",
-      createdAt: data.created_timestamp,
+      id: withdrawalData.id,
+      status: statusMap[withdrawalData.status] || "PROCESSING",
+      createdAt: withdrawalData.created_timestamp || new Date().toISOString(),
     };
   } catch (error) {
     console.error("Rail API error:", error);
@@ -158,13 +285,13 @@ export async function createRailPayment(
  */
 async function acceptRailWithdrawal(withdrawalId: string): Promise<void> {
   const baseUrl = config.railApiBaseUrl;
-  const apiKey = config.railApiKey;
+  const accessToken = await getRailAccessToken();
 
   const response = await fetch(`${baseUrl}/v1/withdrawals/${withdrawalId}/accept`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "x-l2f-request-id": `snowrail-accept-${Date.now()}`,
+      Authorization: `Bearer ${accessToken}`,
+      "X-L2f-Request-Id": `snowrail-accept-${Date.now()}`,
     },
   });
 
