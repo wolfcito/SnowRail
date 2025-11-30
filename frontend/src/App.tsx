@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Dashboard from "./components/Dashboard";
 import PaymentFlow from "./components/PaymentFlow";
 import PayrollDetail from "./components/PayrollDetail";
-import ContractTest from "./components/ContractTest";
+import PaymentForm from "./components/PaymentForm";
 import "./App.css";
 
 // App view states
@@ -10,7 +10,7 @@ type ViewState =
   | { view: "dashboard" }
   | { view: "payment-flow"; metering: MeteringInfo }
   | { view: "payroll-detail"; payrollId: string }
-  | { view: "contract-test" };
+  | { view: "payment-form" };
 
 // Metering info from 402 response
 export type MeteringInfo = {
@@ -40,10 +40,10 @@ export type PaymentData = {
 };
 
 function App() {
-  // Check URL hash for contract-test view
+  // Check URL hash for payment-form view
   const getInitialState = (): ViewState => {
-    if (window.location.hash === "#contract-test") {
-      return { view: "contract-test" };
+    if (window.location.hash === "#payment-form") {
+      return { view: "payment-form" };
     }
     return { view: "dashboard" };
   };
@@ -53,8 +53,8 @@ function App() {
   // Listen for hash changes
   useEffect(() => {
     const handleHashChange = () => {
-      if (window.location.hash === "#contract-test") {
-        setState({ view: "contract-test" });
+      if (window.location.hash === "#payment-form") {
+        setState({ view: "payment-form" });
       } else if (window.location.hash === "" || window.location.hash === "#dashboard") {
         setState({ view: "dashboard" });
       }
@@ -117,8 +117,8 @@ function App() {
               onBack={handleBack}
             />
           )}
-          {state.view === "contract-test" && (
-            <ContractTest onBack={handleBack} />
+          {state.view === "payment-form" && (
+            <PaymentForm onBack={handleBack} onSuccess={handlePayrollSuccess} />
           )}
         </div>
       </main>

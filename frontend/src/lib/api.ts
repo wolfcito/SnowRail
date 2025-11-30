@@ -218,6 +218,136 @@ export async function checkFacilitatorHealth(
 }
 
 /**
+ * Process payment - complete flow (Rail + Blockchain + Facilitator)
+ * @param paymentRequest - Payment request data
+ * @param paymentToken - Optional X-PAYMENT header value (e.g., "demo-token")
+ */
+export async function processPayment(
+  paymentRequest: {
+    customer: {
+      first_name: string;
+      last_name: string;
+      email_address: string;
+      telephone_number?: string;
+      mailing_address: {
+        address_line1: string;
+        city: string;
+        state: string;
+        postal_code: string;
+        country_code: string;
+      };
+    };
+    payment: {
+      amount: number;
+      currency: string;
+      recipient?: string;
+      description?: string;
+    };
+  },
+  paymentToken?: string
+): Promise<{
+  success: true;
+  data: {
+    success: boolean;
+    payrollId: string;
+    status: string;
+    steps: {
+      payroll_created: boolean;
+      payments_created: boolean;
+      treasury_checked: boolean;
+      onchain_requested: boolean;
+      onchain_executed: boolean;
+      rail_processed: boolean;
+    };
+    transactions?: {
+      request_tx_hashes?: string[];
+      execute_tx_hashes?: string[];
+    };
+    rail?: {
+      withdrawal_id?: string;
+      status?: string;
+    };
+    errors?: Array<{
+      step: string;
+      error: string;
+    }>;
+  };
+} | {
+  success: false;
+  status: number;
+  error: ApiError;
+}> {
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+
+  if (paymentToken) {
+    headers["X-PAYMENT"] = paymentToken;
+  }
+
+  const response = await fetch(`${API_BASE}/payment/process`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(paymentRequest),
+  });
+
+  const contentType = response.headers.get("content-type");
+  let data: any;
+
+  if (contentType && contentType.includes("application/json")) {
+    data = await response.json();
+  } else {
+    const text = await response.text();
+    console.error("Non-JSON response:", text.substring(0, 200));
+    return {
+      success: false,
+      status: response.status,
+      error: {
+        error: "INVALID_RESPONSE",
+        message: `Server returned non-JSON response: ${response.status} ${response.statusText}`,
+      } as ApiError,
+    };
+  }
+
+  if (!response.ok) {
+    return {
+      success: false,
+      status: response.status,
+      error: data as ApiError,
+    };
+  }
+
+  return {
+    success: true,
+    data: data as {
+      success: boolean;
+      payrollId: string;
+      status: string;
+      steps: {
+        payroll_created: boolean;
+        payments_created: boolean;
+        treasury_checked: boolean;
+        onchain_requested: boolean;
+        onchain_executed: boolean;
+        rail_processed: boolean;
+      };
+      transactions?: {
+        request_tx_hashes?: string[];
+        execute_tx_hashes?: string[];
+      };
+      rail?: {
+        withdrawal_id?: string;
+        status?: string;
+      };
+      errors?: Array<{
+        step: string;
+        error: string;
+      }>;
+    },
+  };
+}
+
+/**
  * Test contract operations
  * @param paymentToken - Optional X-PAYMENT header value (e.g., "demo-token")
  */

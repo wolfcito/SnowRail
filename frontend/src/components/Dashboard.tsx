@@ -104,6 +104,44 @@ function Dashboard({ onPaymentRequired }: DashboardProps) {
         </div>
       </section>
 
+      {/* Payment Form Section */}
+      <section className="action-section">
+        <div className="card action-card">
+          <div className="action-header">
+            <div className="action-icon">💳</div>
+            <div>
+              <h2>Process Payment</h2>
+              <p>Complete payment flow: Rail + Blockchain + Facilitator</p>
+            </div>
+          </div>
+
+          <div className="action-details">
+            <div className="detail-row">
+              <span className="detail-label">Integration</span>
+              <span className="detail-value">Rail API + Smart Contracts</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Payment Method</span>
+              <span className="detail-value">x402 Protocol</span>
+            </div>
+            <div className="detail-row">
+              <span className="detail-label">Network</span>
+              <span className="detail-value">Avalanche Fuji Testnet</span>
+            </div>
+          </div>
+
+          <button
+            className="btn btn-secondary btn-large"
+            onClick={() => {
+              window.location.hash = "#payment-form";
+            }}
+          >
+            <span>🚀</span>
+            Open Payment Form
+          </button>
+        </div>
+      </section>
+
       {/* Info Cards */}
       <section className="info-section">
         <div className="info-cards">
