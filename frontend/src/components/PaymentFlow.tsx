@@ -20,7 +20,6 @@ function PaymentFlow({ metering, meterId = "payroll_execute", onSuccess, onCance
   const [step, setStep] = useState<FlowStep>("review");
   const [error, setError] = useState<string | null>(null);
   const [facilitatorStatus, setFacilitatorStatus] = useState<"checking" | "online" | "offline">("checking");
-  const [paymentProof, setPaymentProof] = useState<string | null>(null);
 
   // Check facilitator status on mount
   useEffect(() => {
@@ -42,8 +41,6 @@ function PaymentFlow({ metering, meterId = "payroll_execute", onSuccess, onCance
         metering,
         meterId
       );
-      
-      setPaymentProof(proof);
       setStep("validating");
       
       // Small delay to show validation step
@@ -198,4 +195,3 @@ function PaymentFlow({ metering, meterId = "payroll_execute", onSuccess, onCance
 }
 
 export default PaymentFlow;
-

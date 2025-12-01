@@ -4,6 +4,7 @@ import PaymentFlow from "./components/PaymentFlow";
 import PayrollDetail from "./components/PayrollDetail";
 import PaymentForm from "./components/PaymentForm";
 import "./App.css";
+import type { MeteringInfo as ApiMeteringInfo } from "./lib/api";
 
 // App view states
 type ViewState = 
@@ -12,13 +13,8 @@ type ViewState =
   | { view: "payroll-detail"; payrollId: string }
   | { view: "payment-form" };
 
-// Metering info from 402 response
-export type MeteringInfo = {
-  price: string;
-  asset: string;
-  chain: string;
-  resource: string;
-  description?: string;
+// Metering info from 402 response (extends API shape with optional meterId)
+export type MeteringInfo = ApiMeteringInfo & {
   meterId?: string;
 };
 
@@ -134,4 +130,3 @@ function App() {
 }
 
 export default App;
-
