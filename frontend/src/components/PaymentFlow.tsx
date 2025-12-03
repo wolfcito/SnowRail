@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { executePayroll, getPaymentProofFromFacilitator, checkFacilitatorHealth } from "../lib/api";
 import type { MeteringInfo } from "../App";
-import "./PaymentFlow.css";
+import { CreditCard, CheckCircle2, AlertCircle, Loader2, X, ArrowRight, ShieldCheck, Wifi, WifiOff } from "lucide-react";
 
 type PaymentFlowProps = {
   metering: MeteringInfo;
@@ -39,6 +39,7 @@ function PaymentFlow({ metering, meterId = "payroll_execute", onSuccess, onCance
         metering,
         meterId
       );
+      
       setStep("validating");
       
       // Small delay to show validation step
@@ -65,127 +66,143 @@ function PaymentFlow({ metering, meterId = "payroll_execute", onSuccess, onCance
   };
 
   return (
-    <div className="payment-flow">
-      <div className="card payment-card">
+    <div className="max-w-xl mx-auto py-12">
+      <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
         {/* Header */}
-        <div className="payment-header">
-          <div className="payment-icon">💳</div>
-          <h2>Payment Required</h2>
-          <p>This API endpoint requires payment via x402 protocol</p>
-        </div>
-
-        {/* Metering Info */}
-        <div className="metering-info">
-          <div className="metering-header">
-            <span className="protocol-badge">8004</span>
-            <span className="resource-name">{metering.resource}</span>
-          </div>
-
-          <div className="metering-details">
-            <div className="metering-row">
-              <span className="label">Price</span>
-              <span className="value price">
-                {metering.price} {metering.asset}
-              </span>
+        <div className="bg-slate-900 p-6 text-white flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/10 rounded-lg">
+              <CreditCard className="text-red-400" size={24} />
             </div>
-            <div className="metering-row">
-              <span className="label">Network</span>
-              <span className="value">{metering.chain}</span>
+            <div>
+              <h2 className="text-lg font-bold">Payment Required</h2>
+              <p className="text-slate-400 text-sm">x402 Protocol Protected</p>
             </div>
-            {metering.description && (
-              <div className="metering-row">
-                <span className="label">Description</span>
-                <span className="value desc">{metering.description}</span>
               </div>
+          
+          {/* Facilitator Status Badge */}
+          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
+            facilitatorStatus === 'online' 
+              ? 'bg-green-500/10 border-green-500/20 text-green-400' 
+              : facilitatorStatus === 'offline'
+              ? 'bg-red-500/10 border-red-500/20 text-red-400'
+              : 'bg-slate-700 border-slate-600 text-slate-400'
+          }`}>
+            {facilitatorStatus === 'checking' ? (
+              <Loader2 size={10} className="animate-spin" />
+            ) : facilitatorStatus === 'online' ? (
+              <Wifi size={10} />
+            ) : (
+              <WifiOff size={10} />
             )}
+            <span className="capitalize">{facilitatorStatus}</span>
           </div>
         </div>
 
-        {/* Facilitator Status */}
-        {facilitatorStatus === "checking" && (
-          <div className="status-message info">
-            <span className="spinner"></span>
-            Checking facilitator status...
+        <div className="p-8">
+          {/* Metering Info */}
+          <div className="mb-8 bg-slate-50 rounded-xl border border-slate-100 overflow-hidden">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <div className="flex items-center gap-2">
+                <span className="bg-slate-200 text-slate-600 text-xs font-mono px-2 py-0.5 rounded">8004</span>
+                <span className="text-sm font-medium text-slate-700">{metering.resource}</span>
+              </div>
+            </div>
+
+            <div className="p-4 space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 text-sm">Price</span>
+                <span className="text-lg font-bold text-slate-900">
+                  {metering.price} <span className="text-sm font-normal text-slate-500">{metering.asset}</span>
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 text-sm">Network</span>
+                <span className="text-sm font-medium text-slate-900 bg-slate-200/50 px-2 py-0.5 rounded">
+                  {metering.chain}
+                </span>
+              </div>
+              {metering.description && (
+                <div className="pt-3 mt-3 border-t border-slate-100">
+                  <p className="text-sm text-slate-600 italic">{metering.description}</p>
           </div>
         )}
-        {facilitatorStatus === "offline" && (
-          <div className="status-message warning">
-            <span>⚠️</span>
-            Facilitator offline - using demo-token for testing
+            </div>
           </div>
-        )}
 
         {/* Status Messages */}
+          <div className="min-h-[60px] flex items-center justify-center mb-8">
         {step === "getting-proof" && (
-          <div className="status-message">
-            <span className="spinner"></span>
-            Getting payment proof from facilitator...
+              <div className="flex flex-col items-center gap-2 text-slate-600">
+                <Loader2 className="animate-spin text-blue-500" size={28} />
+                <span className="text-sm font-medium">Getting proof from facilitator...</span>
           </div>
         )}
 
         {step === "validating" && (
-          <div className="status-message">
-            <span className="spinner"></span>
-            Validating payment proof...
+              <div className="flex flex-col items-center gap-2 text-slate-600">
+                <ShieldCheck className="animate-pulse text-purple-500" size={28} />
+                <span className="text-sm font-medium">Validating payment signature...</span>
           </div>
         )}
 
         {step === "executing" && (
-          <div className="status-message">
-            <span className="spinner"></span>
-            Executing payroll with validated payment...
+              <div className="flex flex-col items-center gap-2 text-slate-600">
+                <Loader2 className="animate-spin text-green-500" size={28} />
+                <span className="text-sm font-medium">Executing payroll...</span>
           </div>
         )}
 
         {step === "success" && (
-          <div className="status-message success">
-            <span className="check">✓</span>
-            Payment validated! Payroll executed successfully.
+              <div className="flex flex-col items-center gap-2 text-green-600">
+                <CheckCircle2 size={32} />
+                <span className="text-sm font-bold">Success! Redirecting...</span>
           </div>
         )}
 
-        {error && <div className="error-message">{error}</div>}
+            {step === "review" && !error && (
+              <div className="text-center text-slate-500 text-sm">
+                Ready to process payment via facilitator
+              </div>
+            )}
+
+            {error && (
+              <div className="flex items-center gap-3 px-4 py-3 bg-red-50 text-red-600 rounded-lg border border-red-100 w-full">
+                <AlertCircle size={20} className="shrink-0" />
+                <span className="text-sm">{error}</span>
+              </div>
+            )}
+          </div>
 
         {/* Actions */}
-        <div className="payment-actions">
           {step === "review" && (
-            <>
+            <div className="grid grid-cols-2 gap-4">
               <button
-                className="btn btn-secondary"
+                className="py-3 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
                 onClick={onCancel}
                 disabled={facilitatorStatus === "checking"}
               >
+                <X size={18} />
                 Cancel
               </button>
               <button
-                className="btn btn-primary"
+                className="py-3 px-4 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-red-500/20"
                 onClick={handleGetPaymentProof}
                 disabled={facilitatorStatus === "checking"}
               >
-                <span>💳</span>
-                Get Payment Proof & Execute
+                <CreditCard size={18} />
+                Pay & Execute
+                <ArrowRight size={16} />
               </button>
-            </>
-          )}
-          {(step === "getting-proof" || step === "validating" || step === "executing") && (
-            <button className="btn btn-secondary" disabled>
-              <span className="spinner"></span>
-              Processing...
-            </button>
+            </div>
           )}
         </div>
 
         {/* Footer info */}
-        <div className="payment-footer">
-          <p>
-            <strong>Agent Flow:</strong> This automatically gets a payment proof from the facilitator,
-            validates it, and executes the payroll. In production, this would use real on-chain payments.
+        <div className="bg-slate-50 p-4 text-center border-t border-slate-100">
+          <p className="text-xs text-slate-500">
+            <strong>Agent Flow:</strong> Automated validation via x402 facilitator.
           </p>
-          {facilitatorStatus === "online" && (
-            <p className="facilitator-status">
-              ✅ Facilitator connected: {FACILITATOR_URL}
-            </p>
-          )}
         </div>
       </div>
     </div>

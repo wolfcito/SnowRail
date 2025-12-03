@@ -3,6 +3,8 @@ import Dashboard from "./components/Dashboard";
 import PaymentFlow from "./components/PaymentFlow";
 import PayrollDetail from "./components/PayrollDetail";
 import PaymentForm from "./components/PaymentForm";
+import ContractTest from "./components/ContractTest";
+import { ParticleBackground } from "./components/ParticleBackground";
 import "./App.css";
 import type { MeteringInfo as ApiMeteringInfo } from "./lib/api";
 
@@ -11,11 +13,13 @@ type ViewState =
   | { view: "dashboard" }
   | { view: "payment-flow"; metering: MeteringInfo }
   | { view: "payroll-detail"; payrollId: string }
-  | { view: "payment-form" };
+  | { view: "payment-form" }
+  | { view: "contract-test" };
 
 // Metering info from 402 response (extends API shape with optional meterId)
 export type MeteringInfo = ApiMeteringInfo & {
   meterId?: string;
+  version: string;
 };
 
 // Payroll data type
@@ -40,6 +44,8 @@ function App() {
   const getInitialState = (): ViewState => {
     if (window.location.hash === "#payment-form") {
       return { view: "payment-form" };
+    } else if (window.location.hash === "#contract-test") {
+      return { view: "contract-test" };
     }
     return { view: "dashboard" };
   };
@@ -51,6 +57,8 @@ function App() {
     const handleHashChange = () => {
       if (window.location.hash === "#payment-form") {
         setState({ view: "payment-form" });
+      } else if (window.location.hash === "#contract-test") {
+        setState({ view: "contract-test" });
       } else if (window.location.hash === "" || window.location.hash === "#dashboard") {
         setState({ view: "dashboard" });
       }
@@ -76,17 +84,24 @@ function App() {
   };
 
   return (
-    <div className="app">
+    <>
+      {/* Particle Background - Outside main app container */}
+      <ParticleBackground />
+      
+      <div className="app min-h-screen text-slate-900 font-sans">
       {/* Header */}
-      <header className="header">
-        <div className="container header-content">
-          <div className="logo" onClick={handleBack}>
-            <span className="logo-icon">❄️</span>
-            <span className="logo-text">SnowRail</span>
+      <header className="header sticky top-0 z-50 backdrop-blur-lg bg-white/80 border-b border-slate-200 shadow-sm">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <div 
+            className="logo flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" 
+            onClick={handleBack}
+          >
+            <span className="logo-icon text-2xl">❄️</span>
+            <span className="logo-text font-bold text-xl tracking-tight text-slate-900">SnowRail</span>
           </div>
           <div className="header-meta">
-            <span className="chain-badge">
-              <span className="chain-dot"></span>
+            <span className="chain-badge inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-sm font-medium text-slate-600">
+              <span className="chain-dot w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
               Avalanche C-Chain
             </span>
           </div>
@@ -94,8 +109,8 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="main">
-        <div className="container">
+      <main className="main py-8">
+        <div className="container mx-auto px-4 max-w-5xl">
           {state.view === "dashboard" && (
             <Dashboard onPaymentRequired={handlePaymentRequired} />
           )}
@@ -116,16 +131,20 @@ function App() {
           {state.view === "payment-form" && (
             <PaymentForm onBack={handleBack} onSuccess={handlePayrollSuccess} />
           )}
+          {state.view === "contract-test" && (
+            <ContractTest onBack={handleBack} />
+          )}
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="footer">
-        <div className="container">
+      <footer className="footer py-8 bg-white border-t border-slate-200 mt-auto">
+        <div className="container mx-auto px-4 text-center text-slate-500 text-sm">
           <p>Powered by x402 Protocol • Built on Avalanche</p>
         </div>
       </footer>
     </div>
+    </>
   );
 }
 

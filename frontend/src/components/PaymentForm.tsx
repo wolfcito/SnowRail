@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { processPayment } from "../lib/api";
 import type { MeteringInfo } from "../App";
-import "./PaymentForm.css";
+import { ArrowLeft, CreditCard, Loader2, CheckCircle2, AlertCircle, Wallet, MapPin, User, Mail, Phone, ExternalLink, Hash, DollarSign } from "lucide-react";
 
 type PaymentFormData = {
   customer: {
@@ -141,7 +141,7 @@ function PaymentForm({ onBack, onSuccess }: { onBack?: () => void; onSuccess?: (
       // Convert amount to cents
       const amountInCents = Math.round(parseFloat(formData.payment.amount) * 100);
 
-      setStep("1. Submitting payment request...");
+      setStep("Submitting payment request...");
 
       // Send with demo-token from the start to avoid 402 error
       const response = await processPayment(
@@ -165,14 +165,14 @@ function PaymentForm({ onBack, onSuccess }: { onBack?: () => void; onSuccess?: (
             meterId: response.error.meterId || "payment_process",
           };
           setPaymentRequired(meteringInfo);
-          setStep("2. Payment required - please complete payment...");
+          setStep("Payment required - please complete payment...");
           return; // Don't throw error, let user complete payment
         }
         throw new Error(response.error.message || "Payment processing failed");
       }
 
       setResult(response.data);
-      setStep("✅ Payment processed successfully!");
+      setStep("Payment processed successfully!");
 
       if (response.data.success && onSuccess) {
         onSuccess(response.data.payrollId);
@@ -181,317 +181,343 @@ function PaymentForm({ onBack, onSuccess }: { onBack?: () => void; onSuccess?: (
       const errorMessage = err.message || "Failed to process payment";
       console.error("Payment processing error:", err);
       setError(errorMessage);
-      setStep("❌ Payment processing failed");
+      setStep("Payment processing failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="payment-form">
-      {onBack && (
-        <button className="back-button" onClick={onBack}>
-          ← Back to Dashboard
-        </button>
-      )}
-
-      <div className="card">
-        <div className="form-header">
-          <div className="form-icon">💳</div>
-          <div>
-            <h2>Process Payment</h2>
-            <p>Complete payment flow: Rail + Blockchain + Facilitator</p>
-          </div>
-        </div>
-
-        {step && (
-          <div className="step-indicator">
-            <span>{step}</span>
-          </div>
+    <div className="min-h-screen flex items-center justify-center py-12 px-4">
+      <div className="w-full max-w-3xl">
+        {onBack && (
+          <button 
+            className="flex items-center gap-2 text-teal-600 hover:text-teal-900 transition-colors font-medium mb-8" 
+            onClick={onBack}
+          >
+            <ArrowLeft size={20} />
+            Back to Dashboard
+          </button>
         )}
 
-        {error && <div className="error-message">{error}</div>}
-
-        {paymentRequired && (
-          <div className="payment-info">
-            <p>
-              <strong>Payment Required:</strong> {paymentRequired.price} {paymentRequired.asset} on {paymentRequired.chain}
-            </p>
-            <p className="payment-note">Using demo-token for testnet</p>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="payment-form-content">
-          {/* Customer Information */}
-          <div className="form-section">
-            <h3>Customer Information</h3>
-            <div className="form-row">
-              <div className="form-group">
-                <label>First Name *</label>
-                <input
-                  type="text"
-                  value={formData.customer.first_name}
-                  onChange={(e) => handleInputChange("customer", "first_name", e.target.value)}
-                  required
-                />
+        <div>
+          <div className="card overflow-hidden">
+            <div className="p-8 border-b border-teal-100 flex items-center gap-4 bg-gradient-to-r from-teal-50 to-white">
+              <div className="p-3 bg-teal-100 rounded-xl" style={{color: '#0d9488'}}>
+                <CreditCard size={28} />
               </div>
-              <div className="form-group">
-                <label>Last Name *</label>
-                <input
-                  type="text"
-                  value={formData.customer.last_name}
-                  onChange={(e) => handleInputChange("customer", "last_name", e.target.value)}
-                  required
-                />
+              <div>
+                <h2 className="text-2xl font-bold text-teal-900">Process Payment</h2>
+                <p className="text-teal-700">Rail API + Blockchain Integration</p>
               </div>
             </div>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Email Address *</label>
-                <input
-                  type="email"
-                  value={formData.customer.email_address}
-                  onChange={(e) => handleInputChange("customer", "email_address", e.target.value)}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Phone Number</label>
-                <input
-                  type="tel"
-                  value={formData.customer.telephone_number}
-                  onChange={(e) => handleInputChange("customer", "telephone_number", e.target.value)}
-                  placeholder="+15551234567"
-                />
-              </div>
+
+            <div className="p-8">
+              {error && (
+                <div className="mb-6 p-5 bg-red-50 text-red-700 rounded-xl border border-red-200 flex items-start gap-3">
+                  <AlertCircle className="shrink-0 mt-0.5" size={20} />
+                  <div>
+                    <h4 className="font-bold">Error Processing Payment</h4>
+                    <p className="text-sm mt-1">{error}</p>
+                  </div>
+                </div>
+              )}
+
+              {paymentRequired && (
+                <div className="mb-6 p-5 bg-yellow-50 text-yellow-800 rounded-xl border border-yellow-200 flex items-start gap-3">
+                  <AlertCircle className="shrink-0 mt-0.5" size={20} />
+                  <div>
+                    <h4 className="font-bold">Payment Required: {paymentRequired.price} {paymentRequired.asset}</h4>
+                    <p className="text-sm mt-1 text-yellow-700">Using demo-token for testnet execution.</p>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-10">
+          {/* Customer Information */}
+                <div>
+                  <h3 className="text-base font-bold text-teal-900 uppercase tracking-wider mb-6 flex items-center gap-2 pb-3 border-b border-teal-100">
+                    <User size={18} className="text-teal-600" />
+                    Customer Information
+                  </h3>
+                  
+                  <div className="grid md:grid-cols-2 gap-6 mb-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-teal-800">First Name</label>
+                      <input
+                        className="w-full px-4 py-3 rounded-lg"
+                        type="text"
+                        value={formData.customer.first_name}
+                        onChange={(e) => handleInputChange("customer", "first_name", e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-teal-800">Last Name</label>
+                      <input
+                        className="w-full px-4 py-3 rounded-lg"
+                        type="text"
+                        value={formData.customer.last_name}
+                        onChange={(e) => handleInputChange("customer", "last_name", e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-teal-800 flex items-center gap-2">
+                        <Mail size={14} className="text-teal-600" /> Email Address
+                      </label>
+                      <input
+                        className="w-full px-4 py-3 rounded-lg"
+                        type="email"
+                        value={formData.customer.email_address}
+                        onChange={(e) => handleInputChange("customer", "email_address", e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-teal-800 flex items-center gap-2">
+                        <Phone size={14} className="text-teal-600" /> Phone Number
+                      </label>
+                      <input
+                        className="w-full px-4 py-3 rounded-lg"
+                        type="tel"
+                        value={formData.customer.telephone_number}
+                        onChange={(e) => handleInputChange("customer", "telephone_number", e.target.value)}
+                        placeholder="+15551234567"
+                      />
+                    </div>
+                  </div>
             </div>
 
             {/* Mailing Address */}
-            <div className="form-subsection">
-              <h4>Mailing Address</h4>
-              <div className="form-group">
-                <label>Address Line 1 *</label>
-                <input
-                  type="text"
-                  value={formData.customer.mailing_address.address_line1}
-                  onChange={(e) => handleInputChange("customer", "address_address_line1", e.target.value)}
-                  required
-                />
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>City *</label>
-                  <input
-                    type="text"
-                    value={formData.customer.mailing_address.city}
-                    onChange={(e) => handleInputChange("customer", "address_city", e.target.value)}
-                    required
-                  />
+                <div>
+                  <h3 className="text-base font-bold text-teal-900 uppercase tracking-wider mb-6 flex items-center gap-2 pb-3 border-b border-teal-100">
+                    <MapPin size={18} className="text-teal-600" />
+                    Mailing Address
+                  </h3>
+                  
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-teal-800">Address Line 1</label>
+                      <input
+                        className="w-full px-4 py-3 rounded-lg"
+                        type="text"
+                        value={formData.customer.mailing_address.address_line1}
+                        onChange={(e) => handleInputChange("customer", "address_address_line1", e.target.value)}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-teal-800">City</label>
+                        <input
+                          className="w-full px-4 py-3 rounded-lg"
+                          type="text"
+                          value={formData.customer.mailing_address.city}
+                          onChange={(e) => handleInputChange("customer", "address_city", e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-teal-800">State</label>
+                        <input
+                          className="w-full px-4 py-3 rounded-lg"
+                          type="text"
+                          value={formData.customer.mailing_address.state}
+                          onChange={(e) => handleInputChange("customer", "address_state", e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-teal-800">Postal Code</label>
+                        <input
+                          className="w-full px-4 py-3 rounded-lg"
+                          type="text"
+                          value={formData.customer.mailing_address.postal_code}
+                          onChange={(e) => handleInputChange("customer", "address_postal_code", e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-teal-800">Country Code</label>
+                        <input
+                          className="w-full px-4 py-3 rounded-lg"
+                          type="text"
+                          value={formData.customer.mailing_address.country_code}
+                          onChange={(e) => handleInputChange("customer", "address_country_code", e.target.value)}
+                          required
+                          maxLength={2}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="form-group">
-                  <label>State *</label>
-                  <input
-                    type="text"
-                    value={formData.customer.mailing_address.state}
-                    onChange={(e) => handleInputChange("customer", "address_state", e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Postal Code *</label>
-                  <input
-                    type="text"
-                    value={formData.customer.mailing_address.postal_code}
-                    onChange={(e) => handleInputChange("customer", "address_postal_code", e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Country Code *</label>
-                  <input
-                    type="text"
-                    value={formData.customer.mailing_address.country_code}
-                    onChange={(e) => handleInputChange("customer", "address_country_code", e.target.value)}
-                    required
-                    maxLength={2}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Payment Information */}
-          <div className="form-section">
-            <h3>Payment Information</h3>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Amount (USD) *</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  value={formData.payment.amount}
-                  onChange={(e) => handleInputChange("payment", "amount", e.target.value)}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>Currency</label>
-                <select
-                  value={formData.payment.currency}
-                  onChange={(e) => handleInputChange("payment", "currency", e.target.value)}
-                >
-                  <option value="USD">USD</option>
-                </select>
-              </div>
-            </div>
-            <div className="form-group">
-              <label>Recipient Address (Optional)</label>
-              <input
-                type="text"
-                value={formData.payment.recipient}
-                onChange={(e) => handleInputChange("payment", "recipient", e.target.value)}
-                placeholder="0x..."
-              />
-            </div>
-            <div className="form-group">
-              <label>Description (Optional)</label>
-              <input
-                type="text"
-                value={formData.payment.description}
-                onChange={(e) => handleInputChange("payment", "description", e.target.value)}
-                placeholder="Payment description"
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            className="btn btn-primary btn-large"
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <span className="spinner"></span>
-                Processing Payment...
-              </>
-            ) : (
-              <>
-                <span>🚀</span>
-                Process Payment
-              </>
-            )}
-          </button>
-        </form>
-
-        {/* Results */}
-        {result && (
-          <div className="payment-results">
-            <h3>Processing Results</h3>
-            <div className="result-summary">
-              <div className={`status-badge ${result.success ? "success" : "failed"}`}>
-                {result.success ? "✅ Success" : "❌ Failed"}
-              </div>
-              <div className="result-info">
-                <p><strong>Payroll ID:</strong> {result.payrollId}</p>
-                <p><strong>Status:</strong> {result.status}</p>
-              </div>
-            </div>
-
-            <div className="steps-status">
-              <h4>Processing Steps</h4>
-              <ul>
-                <li className={result.steps.payroll_created ? "success" : "pending"}>
-                  {result.steps.payroll_created ? "✅" : "⏳"} Payroll Created
-                </li>
-                <li className={result.steps.payments_created ? "success" : "pending"}>
-                  {result.steps.payments_created ? "✅" : "⏳"} Payments Created
-                </li>
-                <li className={result.steps.treasury_checked ? "success" : "pending"}>
-                  {result.steps.treasury_checked ? "✅" : "⏳"} Treasury Checked
-                </li>
-                <li className={result.steps.onchain_requested ? "success" : "pending"}>
-                  {result.steps.onchain_requested ? "✅" : "⏳"} On-Chain Requested
-                </li>
-                <li className={result.steps.onchain_executed ? "success" : "pending"}>
-                  {result.steps.onchain_executed ? "✅" : "⏳"} On-Chain Executed
-                </li>
-                <li className={result.steps.rail_processed ? "success" : "pending"}>
-                  {result.steps.rail_processed ? "✅" : "⏳"} Rail Processed
-                </li>
-              </ul>
-            </div>
-
-            {result.transactions && (
-              <div className="transactions">
-                <h4>Blockchain Transactions</h4>
-                {result.transactions.request_tx_hashes && result.transactions.request_tx_hashes.length > 0 && (
-                  <div>
-                    <strong>Request Transactions:</strong>
-                    <ul>
-                      {result.transactions.request_tx_hashes.map((hash, idx) => (
-                        <li key={idx}>
-                          <a
-                            href={`https://testnet.snowtrace.io/tx/${hash}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="tx-link"
-                          >
-                            {hash}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
+                <div>
+                  <h3 className="text-base font-bold text-teal-900 uppercase tracking-wider mb-6 flex items-center gap-2 pb-3 border-b border-teal-100">
+                    <Wallet size={18} className="text-teal-600" />
+                    Payment Details
+                  </h3>
+                  
+                  <div className="grid md:grid-cols-2 gap-6 mb-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-teal-800 flex items-center gap-2">
+                        <DollarSign size={14} className="text-teal-600" /> Amount (USD)
+                      </label>
+                      <input
+                        className="w-full px-4 py-3 rounded-lg font-mono"
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        value={formData.payment.amount}
+                        onChange={(e) => handleInputChange("payment", "amount", e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-teal-800">Currency</label>
+                      <select
+                        className="w-full px-4 py-3 rounded-lg bg-white"
+                        value={formData.payment.currency}
+                        onChange={(e) => handleInputChange("payment", "currency", e.target.value)}
+                      >
+                        <option value="USD">USD</option>
+                      </select>
+                    </div>
                   </div>
-                )}
-                {result.transactions.execute_tx_hashes && result.transactions.execute_tx_hashes.length > 0 && (
-                  <div>
-                    <strong>Execute Transactions:</strong>
-                    <ul>
-                      {result.transactions.execute_tx_hashes.map((hash, idx) => (
-                        <li key={idx}>
-                          <a
-                            href={`https://testnet.snowtrace.io/tx/${hash}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="tx-link"
-                          >
-                            {hash}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
+                  
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-teal-800 flex items-center gap-2">
+                        <Hash size={14} className="text-teal-600" /> Recipient Address (Optional)
+                      </label>
+                      <input
+                        className="w-full px-4 py-3 rounded-lg font-mono text-sm"
+                        type="text"
+                        value={formData.payment.recipient}
+                        onChange={(e) => handleInputChange("payment", "recipient", e.target.value)}
+                        placeholder="0x..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-teal-800">Description (Optional)</label>
+                      <input
+                        className="w-full px-4 py-3 rounded-lg"
+                        type="text"
+                        value={formData.payment.description}
+                        onChange={(e) => handleInputChange("payment", "description", e.target.value)}
+                        placeholder="Payment description"
+                      />
+                    </div>
                   </div>
-                )}
-              </div>
-            )}
+                </div>
 
-            {result.rail && (
-              <div className="rail-info">
-                <h4>Rail Processing</h4>
-                <p><strong>Withdrawal ID:</strong> {result.rail.withdrawal_id}</p>
-                <p><strong>Status:</strong> {result.rail.status}</p>
+                <div className="pt-8 mt-8 border-t border-teal-100">
+                  <button
+                    type="submit"
+                    className="btn btn-primary btn-large w-full"
+                    disabled={loading}
+                  >
+                  {loading ? (
+                    <>
+                      <Loader2 className="animate-spin" size={24} />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      Process Payment
+                      <ArrowLeft className="rotate-180" size={20} />
+                    </>
+                  )}
+                  </button>
+                </div>
+                </form>
               </div>
-            )}
+            </div>
 
-            {result.errors && result.errors.length > 0 && (
-              <div className="errors">
-                <h4>Errors</h4>
-                <ul>
-                  {result.errors.map((err, idx) => (
-                    <li key={idx}>
-                      <strong>{err.step}:</strong> {err.error}
-                    </li>
-                  ))}
-                </ul>
+            {/* Results Section - Below Form */}
+            {step && (
+              <div className="card overflow-hidden mt-8">
+                <div className="p-6 border-b border-teal-100 bg-teal-50">
+                  <h3 className="font-bold text-teal-900 text-xl">Payment Status</h3>
+                </div>
+                <div className="p-8">
+                  <div className="flex items-center gap-4 mb-8 p-5 bg-teal-50 rounded-xl">
+                    {loading ? (
+                      <Loader2 className="animate-spin text-teal-600" size={28} />
+                    ) : result?.success ? (
+                      <CheckCircle2 className="text-green-600" size={28} />
+                    ) : error ? (
+                      <AlertCircle className="text-red-600" size={28} />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full border-3 border-teal-300"></div>
+                    )}
+                    <span className="text-lg font-medium text-teal-900">{step}</span>
+                  </div>
+
+                  {result && (
+                    <div className="space-y-8">
+                      <div>
+                        <h4 className="text-sm font-bold text-teal-700 uppercase tracking-wider mb-5 pb-2 border-b border-teal-100">Progress Steps</h4>
+                        <ul className="space-y-4">
+                          {[
+                            { label: "Payroll Created", status: result.steps.payroll_created },
+                            { label: "Payments Created", status: result.steps.payments_created },
+                            { label: "Treasury Checked", status: result.steps.treasury_checked },
+                            { label: "On-Chain Requested", status: result.steps.onchain_requested },
+                            { label: "On-Chain Executed", status: result.steps.onchain_executed },
+                            { label: "Rail Processed", status: result.steps.rail_processed },
+                          ].map((item, idx) => (
+                            <li key={idx} className="flex items-center gap-4">
+                              {item.status ? (
+                                <CheckCircle2 size={20} className="text-green-600 shrink-0" />
+                              ) : (
+                                <div className="w-5 h-5 rounded-full border-2 border-teal-200 shrink-0"></div>
+                              )}
+                              <span className={item.status ? "text-teal-900 font-medium" : "text-teal-500"}>
+                                {item.label}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {(result.transactions?.request_tx_hashes?.length || 0) > 0 && (
+                        <div>
+                          <h4 className="text-sm font-bold text-teal-700 uppercase tracking-wider mb-4 pb-2 border-b border-teal-100">Transactions</h4>
+                          <div className="space-y-3">
+                            {result.transactions?.request_tx_hashes?.map((hash, idx) => (
+                              <a
+                                key={idx}
+                                href={`https://testnet.snowtrace.io/tx/${hash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-3 text-sm text-teal-600 hover:text-teal-800 hover:underline truncate p-3 bg-teal-50 rounded-lg transition-colors"
+                              >
+                                <ExternalLink size={16} />
+                                <span className="truncate font-mono">{hash}</span>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
-        )}
+        </div>
       </div>
-    </div>
   );
 }
 
 export default PaymentForm;
-

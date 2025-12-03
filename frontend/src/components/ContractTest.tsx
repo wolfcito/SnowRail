@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { testContract } from "../lib/api";
 import type { MeteringInfo } from "../App";
-import "./ContractTest.css";
+import { ArrowLeft, Activity, ExternalLink, CheckCircle2, XCircle, Zap, Database, Shield, Clock } from "lucide-react";
 
 type TestResult = {
   step: string;
@@ -42,7 +42,7 @@ function ContractTest({ onBack }: { onBack?: () => void }) {
 
     try {
       // Step 1: Try without payment (expect 402)
-      setStep("1. Requesting test (checking payment requirement)...");
+      setStep("Requesting test (checking payment requirement)...");
       const result = await testContract();
 
       if (!result.success && result.status === 402) {
@@ -53,7 +53,7 @@ function ContractTest({ onBack }: { onBack?: () => void }) {
             meterId: result.error.meterId || "contract_test",
           };
           setPaymentRequired(meteringInfo);
-          setStep("2. Payment required - submitting with demo-token...");
+          setStep("Payment required - submitting with demo-token...");
           
           // Step 2: Retry with demo-token
           const paidResult = await testContract("demo-token");
@@ -63,11 +63,11 @@ function ContractTest({ onBack }: { onBack?: () => void }) {
           }
 
           // Step 3: Extract results
-          setStep("3. Extracting results...");
+          setStep("Extracting results...");
           setResults(paidResult.data.results);
           setTransactionHashes(paidResult.data.transactionHashes);
           setSummary(paidResult.data.summary);
-          setStep("✅ Test completed!");
+          setStep("Test completed!");
         } else {
           throw new Error("Payment required but no metering info provided");
         }
@@ -76,7 +76,7 @@ function ContractTest({ onBack }: { onBack?: () => void }) {
         setResults(result.data.results);
         setTransactionHashes(result.data.transactionHashes);
         setSummary(result.data.summary);
-        setStep("✅ Test completed!");
+        setStep("Test completed!");
       } else {
         throw new Error(result.error.message || "Test failed");
       }
@@ -84,7 +84,7 @@ function ContractTest({ onBack }: { onBack?: () => void }) {
       const errorMessage = err.message || "Failed to execute contract test";
       console.error("Contract test error:", err);
       setError(errorMessage);
-      setStep("❌ Test failed");
+      setStep("Test failed");
       
       // If it's a network error, suggest checking backend
       if (errorMessage.includes("Failed to fetch") || errorMessage.includes("404")) {
@@ -96,142 +96,183 @@ function ContractTest({ onBack }: { onBack?: () => void }) {
   };
 
   return (
-    <div className="contract-test">
+    <div className="max-w-4xl mx-auto pb-12">
       {onBack && (
-        <button className="back-button" onClick={onBack}>
-          ← Back to Dashboard
+        <button 
+          className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors font-medium mb-8" 
+          onClick={onBack}
+        >
+          <ArrowLeft size={20} />
+          Back to Dashboard
         </button>
       )}
-      <div className="card">
-        <div className="test-header">
-          <div className="test-icon">🧪</div>
+
+      <div className="grid md:grid-cols-3 gap-8">
+        {/* Main Test Area */}
+        <div className="md:col-span-2 space-y-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="p-6 border-b border-slate-100 flex items-center gap-3 bg-slate-900 text-white">
+              <div className="p-2 bg-white/10 rounded-lg">
+                <Activity size={24} className="text-blue-400" />
+              </div>
           <div>
-            <h2>Contract Test</h2>
-            <p>Test Treasury contract operations through the agent</p>
+                <h2 className="text-xl font-bold">Contract Test</h2>
+                <p className="text-slate-400 text-sm">Treasury Operations Verification</p>
           </div>
         </div>
 
+            <div className="p-8">
         {step && (
-          <div className="step-indicator">
-            <span>{step}</span>
+                <div className="flex items-center gap-3 mb-6 p-4 bg-blue-50 text-blue-700 rounded-xl border border-blue-100">
+                  {loading ? <Clock className="animate-spin" size={20} /> : <CheckCircle2 size={20} />}
+                  <span className="font-medium">{step}</span>
           </div>
         )}
 
-        {error && <div className="error-message">{error}</div>}
+              {error && (
+                <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-xl border border-red-100 flex items-start gap-3">
+                  <XCircle className="shrink-0 mt-0.5" size={18} />
+                  <div>
+                    <h4 className="font-bold text-sm">Test Failed</h4>
+                    <p className="text-sm mt-1">{error}</p>
+                  </div>
+                </div>
+              )}
 
         {paymentRequired && (
-          <div className="payment-info">
-            <p>
-              <strong>Payment Required:</strong> {paymentRequired.price} {paymentRequired.asset} on {paymentRequired.chain}
-            </p>
-            <p className="payment-note">Using demo-token for testnet</p>
+                <div className="mb-6 p-4 bg-yellow-50 text-yellow-800 rounded-xl border border-yellow-100 flex items-start gap-3">
+                  <Shield className="shrink-0 mt-0.5" size={18} />
+                  <div>
+                    <h4 className="font-bold text-sm">Payment Required: {paymentRequired.price} {paymentRequired.asset}</h4>
+                    <p className="text-sm mt-1 text-yellow-700">Using demo-token for testnet execution.</p>
+                  </div>
           </div>
         )}
 
         <button
-          className="btn btn-primary btn-large"
+                className="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg transition-colors shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
           onClick={executeTest}
           disabled={loading}
         >
           {loading ? (
             <>
-              <span className="spinner"></span>
-              Running Test...
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Running Test Suite...
             </>
           ) : (
             <>
-              <span>⚡</span>
+                    <Zap size={20} />
               Run Contract Test
             </>
           )}
         </button>
-
-        {summary && (
-          <div className="test-summary">
-            <h3>Test Summary</h3>
-            <div className="summary-stats">
-              <div className="stat">
-                <span className="stat-label">Total Operations</span>
-                <span className="stat-value">{summary.total}</span>
-              </div>
-              <div className="stat stat-success">
-                <span className="stat-label">Successful</span>
-                <span className="stat-value">{summary.successful}</span>
-              </div>
-              <div className="stat stat-failed">
-                <span className="stat-label">Failed</span>
-                <span className="stat-value">{summary.failed}</span>
-              </div>
             </div>
           </div>
-        )}
 
+          {/* Results List */}
         {results.length > 0 && (
-          <div className="test-results">
-            <h3>Test Results</h3>
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="p-6 border-b border-slate-100">
+                <h3 className="font-bold text-slate-900">Operation Logs</h3>
+              </div>
+              <div className="divide-y divide-slate-100">
             {results.map((result, index) => (
-              <div key={index} className={`result-item ${result.success ? "success" : "failed"}`}>
-                <div className="result-header">
-                  <span className="result-icon">{result.success ? "✅" : "❌"}</span>
-                  <span className="result-step">{result.step}</span>
+                  <div key={index} className="p-4 hover:bg-slate-50 transition-colors">
+                    <div className="flex items-start gap-3">
+                      <div className={`mt-1 ${result.success ? "text-green-500" : "text-red-500"}`}>
+                        {result.success ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
                 </div>
+                      <div className="flex-1">
+                        <h4 className={`text-sm font-medium ${result.success ? "text-slate-900" : "text-red-600"}`}>
+                          {result.step}
+                        </h4>
+                        
+                        <div className="mt-2 space-y-1 text-xs text-slate-500 font-mono">
                 {result.transactionHash && (
-                  <div className="result-detail">
-                    <strong>TX Hash:</strong>{" "}
+                            <div className="flex items-center gap-1">
+                              <span className="font-semibold text-slate-400">TX:</span>
                     <a
                       href={`https://testnet.snowtrace.io/tx/${result.transactionHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="tx-link"
+                                className="text-blue-500 hover:underline flex items-center gap-0.5"
                     >
-                      {result.transactionHash}
+                                {result.transactionHash.substring(0, 10)}...{result.transactionHash.substring(result.transactionHash.length - 8)}
+                                <ExternalLink size={10} />
                     </a>
                   </div>
                 )}
-                {result.blockNumber && (
-                  <div className="result-detail">
-                    <strong>Block:</strong> {result.blockNumber}
-                  </div>
-                )}
                 {result.formatted && (
-                  <div className="result-detail">
-                    <strong>Balance:</strong> {result.formatted}
-                  </div>
+                            <div><span className="font-semibold text-slate-400">Balance:</span> {result.formatted}</div>
                 )}
                 {result.allowance && (
-                  <div className="result-detail">
-                    <strong>Allowance:</strong> {result.allowance}
-                  </div>
+                            <div><span className="font-semibold text-slate-400">Allowance:</span> {result.allowance}</div>
                 )}
                 {result.error && (
-                  <div className="result-detail error">
-                    <strong>Error:</strong> {result.error}
+                            <div className="text-red-500 bg-red-50 p-2 rounded mt-1 font-sans">{result.error}</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                )}
+                ))}
               </div>
-            ))}
           </div>
         )}
+        </div>
 
-        {transactionHashes.length > 0 && (
-          <div className="transaction-hashes">
-            <h3>Contract Transaction Hashes</h3>
-            <ul>
-              {transactionHashes.map((hash, index) => (
-                <li key={index}>
-                  <a
+        {/* Sidebar Summary */}
+        <div className="md:col-span-1 space-y-6">
+          {summary && (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden sticky top-24">
+              <div className="p-4 border-b border-slate-100 bg-slate-50">
+                <h3 className="font-bold text-slate-900">Test Summary</h3>
+              </div>
+              <div className="p-6 space-y-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-slate-900">{summary.total}</div>
+                  <div className="text-xs text-slate-500 uppercase tracking-wider">Total Operations</div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 bg-green-50 rounded-xl text-center border border-green-100">
+                    <div className="text-xl font-bold text-green-600">{summary.successful}</div>
+                    <div className="text-[10px] text-green-700 uppercase tracking-wider font-medium">Success</div>
+                  </div>
+                  <div className="p-3 bg-red-50 rounded-xl text-center border border-red-100">
+                    <div className="text-xl font-bold text-red-600">{summary.failed}</div>
+                    <div className="text-[10px] text-red-700 uppercase tracking-wider font-medium">Failed</div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100">
+                  <div className="flex items-center gap-2 text-slate-500 text-xs mb-3">
+                    <Database size={14} />
+                    <span>Transaction History</span>
+                  </div>
+                  <div className="space-y-2">
+                    {transactionHashes.slice(0, 5).map((hash, index) => (
+                      <a
+                        key={index}
                     href={`https://testnet.snowtrace.io/tx/${hash}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="tx-link"
+                        className="block text-xs font-mono text-blue-500 hover:underline truncate"
                   >
-                    {index + 1}. {hash}
+                        {hash}
                   </a>
-                </li>
-              ))}
-            </ul>
+                    ))}
+                    {transactionHashes.length > 5 && (
+                      <div className="text-xs text-slate-400 text-center italic">
+                        + {transactionHashes.length - 5} more transactions
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
