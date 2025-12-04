@@ -95,13 +95,13 @@ export function createFacilitatorRouter(): Router {
       let paymentProof: PaymentProof;
       if (typeof proof === "string") {
         // Check for demo token first before trying to parse JSON
-        if (proof === "demo-token") {
-          return res.json({
-            valid: true,
-            payer: "0xDemoPayerAddress",
-            amount: expectedPrice,
-          });
-        }
+          if (proof === "demo-token") {
+            return res.json({
+              valid: true,
+              payer: "0xDemoPayerAddress",
+              amount: expectedPrice,
+            });
+          }
         
         try {
           paymentProof = JSON.parse(proof);
@@ -317,13 +317,13 @@ export function createFacilitatorServer(): Express {
       let paymentProof: PaymentProof;
       if (typeof proof === "string") {
         // Check for demo token first before trying to parse JSON
-        if (proof === "demo-token") {
-          return res.json({
-            valid: true,
-            payer: "0xDemoPayerAddress",
-            amount: expectedPrice,
-          });
-        }
+          if (proof === "demo-token") {
+            return res.json({
+              valid: true,
+              payer: "0xDemoPayerAddress",
+              amount: expectedPrice,
+            });
+          }
         
         try {
           paymentProof = JSON.parse(proof);
