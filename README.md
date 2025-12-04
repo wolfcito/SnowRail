@@ -47,7 +47,7 @@ SnowRail is an **autonomous treasury orchestrator** that bridges crypto and fiat
                             │
                     ┌───────▼───────────┐
                     │     Arweave       │
-                    │ (Permanent Records)│
+                    │(Permanent Records)│
                     └───────────────────┘
 ```
 
