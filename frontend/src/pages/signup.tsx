@@ -26,7 +26,7 @@ export function SignupPage() {
       setSuccessMessage("Account created successfully! Redirecting...");
       // Wait a moment to show success message before redirect
       setTimeout(() => {
-        navigate("/dashboard");
+        navigate("/");
       }, 1500);
     }
     return success;
