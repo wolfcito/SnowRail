@@ -8,6 +8,7 @@ import { ProtectedRoute } from "./components/auth/protected-route.js";
 import { LoginPage } from "./pages/login.js";
 import { SignupPage } from "./pages/signup.js";
 import Dashboard from "./pages/dashboard.js";
+import LegacyDashboard from "./components/Dashboard.js";
 import PaymentForm from "./components/PaymentForm";
 import ContractTest from "./components/ContractTest";
 import { AgentIdentity } from "./components/AgentIdentity";
@@ -27,7 +28,7 @@ function AppRoutes() {
 
   return (
     <Routes>
-      {/* Root - redirect based on auth */}
+      {/* Root - landing page with demo content */}
       <Route
         path="/"
         element={
@@ -39,7 +40,11 @@ function AppRoutes() {
               </div>
             </div>
           ) : isAuthenticated ? (
-            <Navigate to="/dashboard" replace />
+            <ProtectedRoute isAuthenticated={isAuthenticated} isLoading={isLoading}>
+              <AppLayout>
+                <LegacyDashboard onPaymentRequired={() => {}} />
+              </AppLayout>
+            </ProtectedRoute>
           ) : (
             <Navigate to="/login" replace />
           )
@@ -52,11 +57,11 @@ function AppRoutes() {
 
       {/* Protected routes */}
       <Route
-        path="/dashboard"
+        path="/treasury-dashboard"
         element={
           <ProtectedRoute isAuthenticated={isAuthenticated} isLoading={isLoading}>
             <AppLayout>
-              <Dashboard onPaymentRequired={() => {}} />
+              <Dashboard />
             </AppLayout>
           </ProtectedRoute>
         }
