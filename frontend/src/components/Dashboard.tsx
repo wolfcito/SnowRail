@@ -1,13 +1,15 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { executePayroll } from "../lib/api";
 import type { MeteringInfo } from "../App";
-import { CreditCard, Wallet, Box, ArrowRight, Zap, Shield, Activity, Globe, DollarSign, Sparkles } from "lucide-react";
+import { CreditCard, Wallet, Box, ArrowRight, Zap, Shield, Activity, Globe, DollarSign, Sparkles, BarChart3 } from "lucide-react";
 
 type DashboardProps = {
   onPaymentRequired: (metering: MeteringInfo) => void;
 };
 
 function Dashboard({ onPaymentRequired }: DashboardProps) {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,6 +55,16 @@ function Dashboard({ onPaymentRequired }: DashboardProps) {
         <p className="text-xl text-teal-700 mb-10 leading-relaxed">
           Autonomous treasury orchestration for AI agents. Execute cross-border payroll with permanent audit trail.
         </p>
+        {/* Treasury Dashboard Link */}
+        <div className="flex justify-center mt-8">
+          <button
+            onClick={() => navigate("/treasury-dashboard")}
+            className="btn btn-primary btn-large"
+          >
+            <BarChart3 size={18} />
+            View Treasury Dashboard
+          </button>
+        </div>
       </section>
 
       <div className="grid md:grid-cols-2 gap-8 mb-16">
