@@ -576,17 +576,22 @@ app.post('/test', async (req, res) => {
   }
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`\n✅ Server running on http://localhost:${PORT}`);
-  console.log(`📖 Health check: http://localhost:${PORT}/health`);
-  console.log(`🧪 Test endpoint: POST http://localhost:${PORT}/test`);
-  console.log(`🚀 Main endpoint: POST http://localhost:${PORT}/process`);
-  console.log(`🔍 Validate agent: GET http://localhost:${PORT}/validate-agent/:agentId`);
-  console.log(`🧪 Contract test: POST http://localhost:${PORT}/api/treasury/test`);
-  console.log(`💳 Facilitator: http://localhost:${PORT}/facilitator`);
-  console.log(`   - Health: http://localhost:${PORT}/facilitator/health`);
-  console.log(`   - Validate: POST http://localhost:${PORT}/facilitator/validate`);
-  console.log(`   - Verify: POST http://localhost:${PORT}/facilitator/verify`);
-  console.log(`   - Settle: POST http://localhost:${PORT}/facilitator/settle\n`);
-});
+// Export app for Vercel serverless functions
+export default app;
+
+// Start the server only in development (not in Vercel)
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`\n✅ Server running on http://localhost:${PORT}`);
+    console.log(`📖 Health check: http://localhost:${PORT}/health`);
+    console.log(`🧪 Test endpoint: POST http://localhost:${PORT}/test`);
+    console.log(`🚀 Main endpoint: POST http://localhost:${PORT}/process`);
+    console.log(`🔍 Validate agent: GET http://localhost:${PORT}/validate-agent/:agentId`);
+    console.log(`🧪 Contract test: POST http://localhost:${PORT}/api/treasury/test`);
+    console.log(`💳 Facilitator: http://localhost:${PORT}/facilitator`);
+    console.log(`   - Health: http://localhost:${PORT}/facilitator/health`);
+    console.log(`   - Validate: POST http://localhost:${PORT}/facilitator/validate`);
+    console.log(`   - Verify: POST http://localhost:${PORT}/facilitator/verify`);
+    console.log(`   - Settle: POST http://localhost:${PORT}/facilitator/settle\n`);
+  });
+}
