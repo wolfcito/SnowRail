@@ -6,8 +6,9 @@
 import { useState } from "react";
 import { Shield, CheckCircle2 } from "lucide-react";
 import { getToken } from "../../hooks/use-session.js";
+import { getApiBase } from "../../utils/api-config.js";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL?.trim() || "http://localhost:4000";
+const API_BASE = getApiBase();
 
 type MockKybSimulatorProps = {
   currentKybLevel: number;

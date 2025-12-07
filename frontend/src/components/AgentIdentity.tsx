@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Sparkles, Copy, Check, ExternalLink, Shield, Database, Activity, Clock, Users, DollarSign, Archive, TrendingUp } from "lucide-react";
+import { getApiBase } from "../utils/api-config.js";
 
 interface AgentCapabilities {
   erc8004Version: string;
@@ -107,29 +108,32 @@ export function AgentIdentity() {
     }
   };
 
+  const API_BASE = getApiBase();
+
   const fetchIdentity = async () => {
-    const response = await fetch("http://localhost:4000/api/agent/identity");
+    const response = await fetch(`${API_BASE}/api/agent/identity`);
     if (!response.ok) throw new Error("Failed to fetch identity");
     const data = await response.json();
     setIdentity(data);
   };
 
   const fetchActivity = async () => {
-    const response = await fetch("http://localhost:4000/api/agent/activity");
+    const response = await fetch(`${API_BASE}/api/agent/activity`);
     if (!response.ok) throw new Error("Failed to fetch activity");
     const data = await response.json();
     setActivity(data);
   };
 
   const fetchStats = async () => {
-    const response = await fetch("http://localhost:4000/api/agent/stats");
+    const response = await fetch(`${API_BASE}/api/agent/stats`);
     if (!response.ok) throw new Error("Failed to fetch stats");
     const data = await response.json();
     setStats(data);
   };
 
   const copyEndpoint = () => {
-    navigator.clipboard.writeText("http://localhost:4000/api/agent/identity");
+    const endpoint = `${API_BASE || window.location.origin}/api/agent/identity`;
+    navigator.clipboard.writeText(endpoint);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -388,7 +392,7 @@ export function AgentIdentity() {
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-teal-600 mb-1">Discovery Endpoint</div>
                   <div className="font-mono text-sm text-teal-900 truncate">
-                    http://localhost:4000/api/agent/identity
+                    {`${getApiBase() || window.location.origin}/api/agent/identity`}
                   </div>
                 </div>
                  <button

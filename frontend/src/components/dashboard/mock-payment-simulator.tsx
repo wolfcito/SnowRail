@@ -6,8 +6,9 @@
 import { useState } from "react";
 import { Zap, DollarSign, Info } from "lucide-react";
 import { getToken } from "../../hooks/use-session.js";
+import { getApiBase } from "../../utils/api-config.js";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL?.trim() || "http://localhost:4000";
+const API_BASE = getApiBase();
 
 type PaymentSimulatorProps = {
   companyId: string;

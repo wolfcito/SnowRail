@@ -8,29 +8,10 @@ import type {
   LoginRequest,
 } from "../types/auth-types.js";
 
-/**
- * Determine API base URL based on environment
- * - Development: Use explicit localhost URL or environment variable
- * - Production: Use empty string for relative URLs (works with Vercel rewrites)
- */
-const getApiBase = (): string => {
-  // Check if explicit API URL is provided via environment variable
-  const envApiUrl = import.meta.env.VITE_API_BASE_URL?.trim();
-  if (envApiUrl) {
-    return envApiUrl;
-  }
+import { getApiBase } from "../utils/api-config.js";
 
-  // In production (Vercel), use empty string for relative URLs
-  // Vercel rewrites will handle routing to the backend
-  if (import.meta.env.PROD) {
-    return "";
-  }
-
-  // In development, use localhost backend
-  return "http://localhost:4000";
-};
-
-const API_BASE = getApiBase();
+// Get API base dynamically (not cached) to work in both local and production
+const getApiBaseUrl = () => getApiBase();
 
 // Types for API responses
 export type MeteringInfo = {
@@ -107,7 +88,7 @@ export async function executePayroll(paymentToken?: string): Promise<{
     headers["X-PAYMENT"] = paymentToken;
   }
 
-  const response = await fetch(`${API_BASE}/api/payroll/execute`, {
+  const response = await fetch(`${getApiBaseUrl()}/api/payroll/execute`, {
     method: "POST",
     headers,
   });
@@ -139,7 +120,7 @@ export async function getPayroll(id: string): Promise<{
   success: false;
   error: ApiError;
 }> {
-  const response = await fetch(`${API_BASE}/api/payroll/${id}`);
+  const response = await fetch(`${getApiBaseUrl()}/api/payroll/${id}`);
   const data = await response.json();
 
   if (!response.ok) {
@@ -160,7 +141,7 @@ export async function getPayroll(id: string): Promise<{
  */
 export async function checkHealth(): Promise<boolean> {
   try {
-    const response = await fetch(`${API_BASE}/health`);
+    const response = await fetch(`${getApiBaseUrl()}/health`);
     return response.ok;
   } catch {
     return false;
@@ -322,7 +303,7 @@ export async function processPayment(
     headers["X-PAYMENT"] = paymentToken;
   }
 
-  const response = await fetch(`${API_BASE}/api/payment/process`, {
+  const response = await fetch(`${getApiBaseUrl()}/api/payment/process`, {
     method: "POST",
     headers,
     body: JSON.stringify(paymentRequest),
@@ -424,7 +405,7 @@ export async function testContract(paymentToken?: string): Promise<{
     headers["X-PAYMENT"] = paymentToken;
   }
 
-  const response = await fetch(`${API_BASE}/api/treasury/test`, {
+  const response = await fetch(`${getApiBaseUrl()}/api/treasury/test`, {
     method: "POST",
     headers,
   });
@@ -490,7 +471,7 @@ export async function signup(
   status: number;
   error: { error: string; message: string };
 }> {
-  const response = await fetch(`${API_BASE}/auth/signup`, {
+  const response = await fetch(`${getApiBaseUrl()}/auth/signup`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -547,7 +528,7 @@ export async function login(
   status: number;
   error: { error: string; message: string };
 }> {
-  const response = await fetch(`${API_BASE}/auth/login`, {
+  const response = await fetch(`${getApiBaseUrl()}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -611,7 +592,7 @@ export async function getCurrentUser(): Promise<{
     };
   }
 
-  const response = await fetch(`${API_BASE}/auth/me`, {
+  const response = await fetch(`${getApiBaseUrl()}/auth/me`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -671,7 +652,7 @@ export async function getDashboard(): Promise<{
     };
   }
 
-  const response = await fetch(`${API_BASE}/api/dashboard`, {
+  const response = await fetch(`${getApiBaseUrl()}/api/dashboard`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
