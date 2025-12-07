@@ -256,7 +256,7 @@ export function createFacilitatorRouter(): Router {
             // Convert atomic amount back to token units (6 decimals for USDC)
             const amount = Number(validationResult.amount || "0") / 1_000_000;
             
-            const callbackResponse = await fetch(callbackUrl, {
+            const callbackResponse = (await fetch(callbackUrl, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -269,7 +269,7 @@ export function createFacilitatorRouter(): Router {
                 txHash: settlementResult.transactionHash,
                 timestamp: new Date().toISOString(),
               }),
-            });
+            })) as globalThis.Response;
 
             if (callbackResponse.ok) {
               logger.info(`Callback successful for payment intent: ${paymentIntentId}`);
@@ -520,7 +520,7 @@ export function createFacilitatorServer(): Express {
             // Convert atomic amount back to token units (6 decimals for USDC)
             const amount = Number(validationResult.amount || "0") / 1_000_000;
             
-            const callbackResponse = await fetch(callbackUrl, {
+            const callbackResponse = (await fetch(callbackUrl, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -533,7 +533,7 @@ export function createFacilitatorServer(): Express {
                 txHash: settlementResult.transactionHash,
                 timestamp: new Date().toISOString(),
               }),
-            });
+            })) as globalThis.Response;
 
             if (callbackResponse.ok) {
               logger.info(`Callback successful for payment intent: ${paymentIntentId}`);

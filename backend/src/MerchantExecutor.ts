@@ -554,7 +554,7 @@ export class MerchantExecutor {
       throw new Error('Facilitator URL is not configured.');
     }
 
-    const fetchResponse = await fetch(`${this.facilitatorUrl}/${endpoint}`, {
+    const fetchResponse = (await fetch(`${this.facilitatorUrl}/${endpoint}`, {
       method: 'POST',
       headers: this.buildHeaders(),
       body: JSON.stringify({
@@ -562,7 +562,7 @@ export class MerchantExecutor {
         paymentPayload: payload,
         paymentRequirements: this.requirements,
       }),
-    });
+    })) as globalThis.Response;
 
     if (!fetchResponse.ok) {
       const text = await fetchResponse.text();

@@ -62,14 +62,14 @@ export async function validateWithFacilitator(
       price: meter.price,
     });
 
-    const response = await fetch(`${facilitatorUrl}/validate`, {
+    const response = (await fetch(`${facilitatorUrl}/validate`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
       body: JSON.stringify(requestBody),
-    });
+    })) as globalThis.Response;
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -131,12 +131,12 @@ export async function checkFacilitatorHealth(): Promise<{
   }
 
   try {
-    const response = await fetch(`${facilitatorUrl}/health`, {
+    const response = (await fetch(`${facilitatorUrl}/health`, {
       method: "GET",
       headers: {
         Accept: "application/json",
       },
-    });
+    })) as globalThis.Response;
 
     return {
       healthy: response.ok,

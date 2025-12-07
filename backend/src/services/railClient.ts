@@ -115,7 +115,7 @@ export async function getRailAccessToken(): Promise<string> {
   const tokenUrl = `${authUrl}?grant_type=client_credentials&scope=${encodeURIComponent(scopes)}`;
 
   try {
-    const response = await fetch(tokenUrl, {
+    const response = (await fetch(tokenUrl, {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -123,7 +123,7 @@ export async function getRailAccessToken(): Promise<string> {
         "Cache-Control": "no-cache",
         Authorization: `Basic ${basicAuth}`,
       },
-    });
+    })) as globalThis.Response;
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -218,7 +218,7 @@ export async function createRailPayment(
       memo: `Payroll-${input.payrollId}`,
     };
 
-    const response = await fetch(`${baseUrl}/v1/withdrawals`, {
+    const response = (await fetch(`${baseUrl}/v1/withdrawals`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -226,7 +226,7 @@ export async function createRailPayment(
         "X-L2f-Request-Id": `snowrail-${Date.now()}`,
       },
       body: JSON.stringify(withdrawalRequest),
-    });
+    })) as globalThis.Response;
 
     if (!response.ok) {
       let errorMsg = `Rail API error: ${response.status} ${response.statusText}`;
@@ -287,13 +287,13 @@ async function acceptRailWithdrawal(withdrawalId: string): Promise<void> {
   const baseUrl = config.railApiBaseUrl;
   const accessToken = await getRailAccessToken();
 
-  const response = await fetch(`${baseUrl}/v1/withdrawals/${withdrawalId}/accept`, {
+  const response = (await fetch(`${baseUrl}/v1/withdrawals/${withdrawalId}/accept`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
       "X-L2f-Request-Id": `snowrail-accept-${Date.now()}`,
     },
-  });
+  })) as globalThis.Response;
 
   if (!response.ok) {
     const errorData = (await response.json()) as RailError;

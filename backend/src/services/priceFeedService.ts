@@ -64,11 +64,11 @@ export async function getTokenPrice(token: string): Promise<number> {
       ? `https://pro-api.coingecko.com/api/v3/simple/price?ids=${coinGeckoId}&vs_currencies=usd&x_cg_pro_api_key=${apiKey}`
       : `https://api.coingecko.com/api/v3/simple/price?ids=${coinGeckoId}&vs_currencies=usd`;
 
-    const response = await fetch(url, {
+    const response = (await fetch(url, {
       headers: {
         Accept: "application/json",
       },
-    });
+    })) as globalThis.Response;
 
     if (!response.ok) {
       throw new Error(`CoinGecko API error: ${response.status}`);
