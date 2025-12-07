@@ -6,7 +6,7 @@ services:
     region: oregon
     plan: free
     buildCommand: cd backend && npm install && npm run build
-    startCommand: cd backend && npx prisma migrate deploy && node --max-old-space-size=512 dist/server.js
+    startCommand: cd backend && chmod +x start.sh && bash start.sh
     envVars:
       - key: NODE_ENV
         value: production
