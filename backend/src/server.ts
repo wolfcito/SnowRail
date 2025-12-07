@@ -559,7 +559,7 @@ app.post('/test', async (req, res) => {
   };
 
   try {
-    const response: globalThis.Response = await fetch(`http://localhost:${PORT}/process`, {
+    const fetchResponse = await fetch(`http://localhost:${PORT}/process`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -567,7 +567,7 @@ app.post('/test', async (req, res) => {
       body: JSON.stringify({ message }),
     });
 
-    const data = await response.json();
+    const data = await (fetchResponse as { json: () => Promise<any> }).json();
     res.json(data);
   } catch (error: any) {
     res.status(500).json({
