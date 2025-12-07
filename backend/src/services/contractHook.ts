@@ -137,8 +137,11 @@ export async function executePayrollPayments(payrollId: string): Promise<string[
 
   // Check treasury balance first
   const treasuryBalance = await getTreasuryBalance(tokenAddress);
+  type PaymentAmount = {
+    amount: number;
+  };
   const totalAmount = payroll.payments.reduce(
-    (sum, p) => sum + usdCentsToTokenAmount(p.amount, tokenDecimals),
+    (sum: bigint, p: PaymentAmount) => sum + usdCentsToTokenAmount(p.amount, tokenDecimals),
     BigInt(0)
   );
 
@@ -203,8 +206,11 @@ export async function executePayrollPayments(payrollId: string): Promise<string[
     where: { payrollId },
   });
 
-  const allPaid = payments.every((p) => p.status === PaymentStatus.ONCHAIN_PAID);
-  const anyFailed = payments.some((p) => p.status === PaymentStatus.FAILED);
+  type PaymentWithStatus = {
+    status: string;
+  };
+  const allPaid = payments.every((p: PaymentWithStatus) => p.status === PaymentStatus.ONCHAIN_PAID);
+  const anyFailed = payments.some((p: PaymentWithStatus) => p.status === PaymentStatus.FAILED);
 
   let payrollStatus: string = PayrollStatus.ONCHAIN_PAID;
   if (anyFailed) {

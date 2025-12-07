@@ -38,7 +38,17 @@ router.get("/activity", async (req: Request, res: Response) => {
     });
 
     // Transform to activity format
-    const activity = payrolls.map(payroll => {
+    type PayrollWithPayments = {
+      id: string;
+      status: string;
+      total: number;
+      currency: string;
+      payments: Array<{ id: string; amount: number; recipient: string | null; status: string }>;
+      createdAt: Date;
+      updatedAt: Date;
+    };
+    
+    const activity = payrolls.map((payroll: PayrollWithPayments) => {
       // Generate Arweave URL (en producción esto vendría de la DB)
       const mockTxId = Buffer.from(payroll.id).toString('base64url').padEnd(43, 'a').substring(0, 43);
       
@@ -68,7 +78,7 @@ router.get("/activity", async (req: Request, res: Response) => {
           }
         },
         // Payment details
-        payments: payroll.payments.map(payment => ({
+        payments: payroll.payments.map((payment: { id: string; amount: number; recipient: string | null; status: string }) => ({
           id: payment.id,
           amount: payment.amount,
           recipient: payment.recipient,
@@ -80,8 +90,8 @@ router.get("/activity", async (req: Request, res: Response) => {
     // Summary stats
     const stats = {
       totalPayrolls: payrolls.length,
-      totalPaid: payrolls.reduce((sum, p) => sum + p.total, 0),
-      totalRecipients: payrolls.reduce((sum, p) => sum + p.payments.length, 0),
+      totalPaid: payrolls.reduce((sum: number, p: PayrollWithPayments) => sum + p.total, 0),
+      totalRecipients: payrolls.reduce((sum: number, p: PayrollWithPayments) => sum + p.payments.length, 0),
       lastActivity: payrolls[0]?.createdAt.toISOString() || null
     };
 
@@ -143,13 +153,18 @@ router.get("/stats", async (req: Request, res: Response) => {
     // Total recipients
     const totalRecipients = await prisma.payment.count();
 
+    type PayrollByStatus = {
+      status: string;
+      _count: { id: number };
+    };
+    
     res.json({
       payrolls: {
-        byStatus: payrollsByStatus.reduce((acc, item) => ({
+        byStatus: payrollsByStatus.reduce((acc: Record<string, number>, item: PayrollByStatus) => ({
           ...acc,
           [item.status]: item._count.id
         }), {}),
-        total: payrollsByStatus.reduce((sum, item) => sum + item._count.id, 0),
+        total: payrollsByStatus.reduce((sum: number, item: PayrollByStatus) => sum + item._count.id, 0),
         last24h
       },
       amounts: {

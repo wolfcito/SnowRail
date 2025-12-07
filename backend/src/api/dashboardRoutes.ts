@@ -57,7 +57,10 @@ export function registerDashboardRoutes(app: Express) {
       });
 
       // Calculate total USD
-      const totalUsd = balances.reduce((sum, balance) => {
+      type CompanyBalance = {
+        balanceUsd: unknown;
+      };
+      const totalUsd = balances.reduce((sum: number, balance: CompanyBalance) => {
         return sum + Number(balance.balanceUsd);
       }, 0);
 
@@ -87,20 +90,39 @@ export function registerDashboardRoutes(app: Express) {
         },
       });
 
+      type PaymentAmount = {
+        amountUsd: unknown;
+      };
       const totalPayments = allPayments.length;
-      const totalReceived = allPayments.reduce((sum, payment) => {
+      const totalReceived = allPayments.reduce((sum: number, payment: PaymentAmount) => {
         return sum + Number(payment.amountUsd);
       }, 0);
 
       // Format balances for response
-      const balancesByToken = balances.map((balance) => ({
+      type BalanceForResponse = {
+        token: string;
+        balanceToken: unknown;
+        balanceUsd: unknown;
+      };
+      const balancesByToken = balances.map((balance: BalanceForResponse) => ({
         token: balance.token,
         balanceToken: Number(balance.balanceToken),
         balanceUsd: Number(balance.balanceUsd),
       }));
 
       // Format payments for response
-      const formattedPayments = recentPayments.map((payment) => ({
+      type PaymentForResponse = {
+        id: string;
+        paymentIntentId: string;
+        token: string;
+        amountToken: unknown;
+        amountUsd: unknown;
+        status: string;
+        txHash: string | null;
+        createdAt: Date;
+        externalRef: string | null;
+      };
+      const formattedPayments = recentPayments.map((payment: PaymentForResponse) => ({
         id: payment.id,
         paymentIntentId: payment.paymentIntentId,
         token: payment.token,

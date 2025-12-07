@@ -26,7 +26,14 @@ export function registerPayrollRoutes(app: Express) {
           total: payroll.total,
           currency: payroll.currency,
           paymentsCount: payroll.payments.length,
-          payments: payroll.payments.map((p) => ({
+          type PaymentItem = {
+            id: string;
+            amount: number;
+            currency: string;
+            status: string;
+            recipient: string | null;
+          };
+          payments: payroll.payments.map((p: PaymentItem) => ({
             id: p.id,
             amount: p.amount,
             currency: p.currency,
@@ -66,7 +73,16 @@ export function registerPayrollRoutes(app: Express) {
           status: payroll.status,
           createdAt: payroll.createdAt.toISOString(),
           updatedAt: payroll.updatedAt.toISOString(),
-          payments: payroll.payments.map((p) => ({
+          type PaymentDetail = {
+            id: string;
+            amount: number;
+            currency: string;
+            status: string;
+            recipient: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+          };
+          payments: payroll.payments.map((p: PaymentDetail) => ({
             id: p.id,
             amount: p.amount,
             currency: p.currency,

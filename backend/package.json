@@ -8,7 +8,7 @@
     "create-x402": "./cli.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "start": "node dist/server.js",
     "dev": "tsc && node dist/server.js",
     "facilitator": "tsc && node dist/facilitator.js",
